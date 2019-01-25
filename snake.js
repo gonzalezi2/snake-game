@@ -38,17 +38,17 @@ function Block() {
       // it will be out of bounds. So we can check after making a move if it will be not before
       this.posX += this.xSpeed;
       this.posY += this.ySpeed;
+      // TODO: Rethink this, maybe?
       this.tail.forEach(block => {
-        console.log(block);
+        console.log(this);
         block[0] += this.xSpeed;
         block[1] += this.ySpeed;
       });
       if(this.isInbounds()) {
         if(this.consumeFood()) {
           // How to store the tail coordinates?
-          console.log(foodPosX, foodPosY);
+          // TODO: Rethink this, maybe?
           this.tail.push([foodPosX, foodPosY]);
-          console.log(this.tail);
           setFoodCoords();
           showFood();
         }
@@ -70,6 +70,7 @@ function Block() {
     ctx.clearRect(0, 0, cWidth, cHeight);
     ctx.fillStyle = 'white';
     ctx.fillRect(this.posX, this.posY, blockSize, blockSize);
+    // TODO: FIXXX IT!!!!!!!
     this.tail.forEach(block => {
       ctx.fillRect(block[0], block[1], blockSize, blockSize);
     });
@@ -135,6 +136,7 @@ function moveSnake(event) {
 function setFoodCoords() {
   foodPosX = Math.floor(Math.random() * scale) * blockSize;
   foodPosY = Math.floor(Math.random() * scale) * blockSize;
+  console.log(foodPosX, foodPosY);
 }
 function showFood() {
   staticCtx.clearRect(0, 0, cWidth, cHeight);
