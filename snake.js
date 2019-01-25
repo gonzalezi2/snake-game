@@ -1,8 +1,9 @@
 var c = document.getElementById('canvas');
-var grid = document.getElementById('staticCanvas');
+var static = document.getElementById('staticCanvas');
 
 var ctx = c.getContext('2d');
-var gCtx = grid.getContext('2d');
+// For drawing elements that don't need to be updated every repaint
+var staticCtx = static.getContext('2d');
 
 var cWidth = c.width;
 var cHeight = c.height;
@@ -16,30 +17,14 @@ var KEYS = {
   "down": 40
 };
 
-function displayGrid() {
-  for(var i = 0; i < scale; i++){
-    gCtx.beginPath();
-    gCtx.strokeStyle = 'blue';
-    gCtx.moveTo(i*blockSize, 0);
-    gCtx.lineTo(i*blockSize, cHeight);
-    gCtx.stroke();
-    gCtx.closePath();
-  }
-  for(var j = 0; j < scale; j++){
-    gCtx.beginPath();
-    gCtx.strokeStyle = 'blue';
-    gCtx.moveTo(0, j*blockSize);
-    gCtx.lineTo(cWidth, j*blockSize);
-    gCtx.stroke();
-    gCtx.closePath();
-  }
-}
-
+// It's probably a good idea to reuse this object for the tail as well to keep track
+// of the position of each tail block
 function Block() {
   this.height = blockSize;
   this.width = blockSize;
   this.xSpeed = 0;
-  this.ySpeed = 0;
+  this.ySpeed = 0;  
+  this.tail = [];
   this.posX = Math.floor(Math.random() * scale) * blockSize;
   this.posY = Math.floor(Math.random() * scale) * blockSize;
   this.then = Date.now();
@@ -53,21 +38,41 @@ function Block() {
       // it will be out of bounds. So we can check after making a move if it will be not before
       this.posX += this.xSpeed;
       this.posY += this.ySpeed;
+      this.tail.forEach(block => {
+        console.log(block);
+        block[0] += this.xSpeed;
+        block[1] += this.ySpeed;
+      });
       if(this.isInbounds()) {
+        if(this.consumeFood()) {
+          // How to store the tail coordinates?
+          console.log(foodPosX, foodPosY);
+          this.tail.push([foodPosX, foodPosY]);
+          console.log(this.tail);
+          setFoodCoords();
+          showFood();
+        }
         this.draw();
-        showFood();
+        // This is drawing the food after each repaint
+        // It would be better to move this to the second canvas so as to reduce
+        // overhead
       } else {
         console.log('you lose!!! Loser');
+        console.log(`Your final score: ${this.tail.length}`);
         return;
       }
     }
     requestAnimationFrame(this.update);
   };
+
     
   this.draw = () => {
     ctx.clearRect(0, 0, cWidth, cHeight);
     ctx.fillStyle = 'white';
     ctx.fillRect(this.posX, this.posY, blockSize, blockSize);
+    this.tail.forEach(block => {
+      ctx.fillRect(block[0], block[1], blockSize, blockSize);
+    });
   };
 
   this.setDirection = (x, y) => {
@@ -82,6 +87,11 @@ function Block() {
     this.posY + this.height < (cHeight + (blockSize / 2)) &&
     this.posY > 0 - (blockSize / 2);
   };
+
+  // Checks to see if we landed on the food/apple
+  this.consumeFood = () => {
+    return foodPosX === this.posX && foodPosY === this.posY;
+  };
 }
 function init() {
   displayGrid();
@@ -92,6 +102,24 @@ function init() {
 function draw() {
   b.update();
   b.draw();
+}
+function displayGrid() {
+  for(var i = 0; i < scale; i++){
+    staticCtx.beginPath();
+    staticCtx.strokeStyle = 'blue';
+    staticCtx.moveTo(i*blockSize, 0);
+    staticCtx.lineTo(i*blockSize, cHeight);
+    staticCtx.stroke();
+    staticCtx.closePath();
+  }
+  for(var j = 0; j < scale; j++){
+    staticCtx.beginPath();
+    staticCtx.strokeStyle = 'blue';
+    staticCtx.moveTo(0, j*blockSize);
+    staticCtx.lineTo(cWidth, j*blockSize);
+    staticCtx.stroke();
+    staticCtx.closePath();
+  }
 }
 function moveSnake(event) {
   if(event.keyCode === KEYS.left) {
@@ -109,8 +137,10 @@ function setFoodCoords() {
   foodPosY = Math.floor(Math.random() * scale) * blockSize;
 }
 function showFood() {
-  ctx.fillStyle = 'red';
-  ctx.fillRect(foodPosX, foodPosY, blockSize, blockSize);
+  staticCtx.clearRect(0, 0, cWidth, cHeight);
+  staticCtx.fillStyle = 'red';
+  staticCtx.fillRect(foodPosX, foodPosY, blockSize, blockSize);
+  displayGrid();
 }
 document.addEventListener('keydown', moveSnake);
 
