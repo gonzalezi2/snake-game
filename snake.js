@@ -1,7 +1,9 @@
 var c = document.getElementById('canvas');
 var grid = document.getElementById('staticCanvas');
+
 var ctx = c.getContext('2d');
 var gCtx = grid.getContext('2d');
+
 var cWidth = c.width;
 var cHeight = c.height;
 var scale = 25;
@@ -13,6 +15,7 @@ var KEYS = {
   "right": 39,
   "down": 40
 };
+
 function displayGrid() {
   for(var i = 0; i < scale; i++){
     gCtx.beginPath();
@@ -45,13 +48,17 @@ function Block() {
     let now = Date.now();
     if(now - this.then > 200){
       this.then = Date.now();
+      // Since the frame rate is limited, we know whether the next move will be out of bounds or not.
+      // We don't need to check for the location of the snake, we just need to see if the next move
+      // it will be out of bounds. So we can check after making a move if it will be not before
+      this.posX += this.xSpeed;
+      this.posY += this.ySpeed;
       if(this.isInbounds()) {
-        this.posX = this.posX + this.xSpeed;
-        this.posY = this.posY + this.ySpeed;
         this.draw();
         showFood();
       } else {
         console.log('you lose!!! Loser');
+        return;
       }
     }
     requestAnimationFrame(this.update);
@@ -70,8 +77,10 @@ function Block() {
   
   // Checks the boundaries of the canvas against the position of the snake
   this.isInbounds = () => {
-    return this.posX + this.width < (cWidth + 1) && this.posX > 0 &&
-      this.posY > 0 && this.posY + this.height < (cHeight + 1);
+    return this.posX + this.width < (cWidth + (blockSize / 2)) &&
+    this.posX > 0 - (blockSize / 2) &&
+    this.posY + this.height < (cHeight + (blockSize / 2)) &&
+    this.posY > 0 - (blockSize / 2);
   };
 }
 function init() {
