@@ -7,7 +7,7 @@ var staticCtx = static.getContext('2d');
 
 var cWidth = c.width;
 var cHeight = c.height;
-var scale = 25;
+var scale = 22;
 var blockSize = cHeight / scale;
 var speed = 1;
 var KEYS = {
@@ -36,22 +36,20 @@ function Block() {
       // Since the frame rate is limited, we know whether the next move will be out of bounds or not.
       // We don't need to check for the location of the snake, we just need to see if the next move
       // it will be out of bounds. So we can check after making a move if it will be not before
+      this.tail.unshift([this.posX, this.posY]);
       this.posX += this.xSpeed;
       this.posY += this.ySpeed;
-      // TODO: Rethink this, maybe?
-      this.tail.forEach(block => {
-        console.log(this);
-        block[0] += this.xSpeed;
-        block[1] += this.ySpeed;
-      });
       if(this.isInbounds()) {
+        if(this.tail.length > 3 && this.selfCollition()) {
+          console.log('You ran into yourself!');
+          return;
+        }
         if(this.consumeFood()) {
-          // How to store the tail coordinates?
-          // TODO: Rethink this, maybe?
           this.tail.push([foodPosX, foodPosY]);
           setFoodCoords();
           showFood();
         }
+        this.tail.pop();
         this.draw();
         // This is drawing the food after each repaint
         // It would be better to move this to the second canvas so as to reduce
@@ -70,7 +68,6 @@ function Block() {
     ctx.clearRect(0, 0, cWidth, cHeight);
     ctx.fillStyle = 'white';
     ctx.fillRect(this.posX, this.posY, blockSize, blockSize);
-    // TODO: FIXXX IT!!!!!!!
     this.tail.forEach(block => {
       ctx.fillRect(block[0], block[1], blockSize, blockSize);
     });
@@ -87,6 +84,16 @@ function Block() {
     this.posX > 0 - (blockSize / 2) &&
     this.posY + this.height < (cHeight + (blockSize / 2)) &&
     this.posY > 0 - (blockSize / 2);
+  };
+
+  this.selfCollition = () => {
+    let bool = false;
+    this.tail.forEach(block => {
+      if(block[0] - this.posX === 0 && block[1] - this.posY === 0) {
+        bool = true;
+      }
+    });
+    return bool;
   };
 
   // Checks to see if we landed on the food/apple
