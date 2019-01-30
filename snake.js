@@ -1,5 +1,6 @@
 var c = document.getElementById('canvas');
 var static = document.getElementById('staticCanvas');
+var htmlScore = document.getElementById('score');
 
 var ctx = c.getContext('2d');
 // For drawing elements that don't need to be updated every repaint
@@ -16,6 +17,7 @@ var KEYS = {
   "right": 39,
   "down": 40
 };
+var score = 0;
 
 // It's probably a good idea to reuse this object for the tail as well to keep track
 // of the position of each tail block
@@ -48,6 +50,8 @@ function Block() {
           this.tail.push([foodPosX, foodPosY]);
           setFoodCoords();
           showFood();
+          score++;
+          htmlScore.textContent++;
         }
         this.tail.pop();
         this.draw();
